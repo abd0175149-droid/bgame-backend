@@ -33,13 +33,7 @@ RUN composer install --no-interaction --no-dev --optimize-autoloader --no-script
 # Copy all application files
 COPY . .
 
-# Run post-install scripts & optimize
-RUN php artisan key:generate --no-interaction || true
-RUN php artisan config:cache || true
-RUN php artisan route:cache || true
-RUN php artisan view:cache || true
-
-# Set correct permissions
+# Set correct permissions (cache runs at deploy time, not build time)
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
