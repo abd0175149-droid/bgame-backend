@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bgame_app:latest
+    container_name: bgame_app
+    restart: unless-stopped
+    ports:
+      - "4070:80"
+    volumes:
+      - ./storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - bgame_network
+
+  db:
+    image: mysql:8.0
+    container_name: bgame_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-bgame_db}
+      MYSQL_USER: ${DB_USERNAME:-bgame_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-bgame_pass}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass_change_me}
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - bgame_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bgame_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: bgame_pma
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4071:80"
+    environment:
+      PMA_HOST: bgame_db
+      PMA_USER: ${DB_USERNAME:-bgame_user}
+      PMA_PASSWORD: ${DB_PASSWORD:-bgame_pass}
+    depends_on:
+      - db
+    networks:
+      - bgame_network
+
+volumes:
+  bgame_db_data:
+    name: bgame_db_data
+
+networks:
+  bgame_network:
+    name: bgame_network
+    driver: bridge
