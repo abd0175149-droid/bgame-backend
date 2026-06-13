@@ -9,12 +9,11 @@ services:
     ports:
       - "4070:80"
     volumes:
+      - ./.env:/var/www/html/.env          # ← mount .env مباشرة
       - ./storage:/var/www/html/storage
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - .env
     networks:
       - bgame_network
 
